@@ -2,6 +2,8 @@ import {Navigate} from "react-router-dom";
 import {useState} from "react";
 import AccessAllowed from "../components/access/AccessAllowed";
 import AccessDenied from "../components/access/AccessDenied";
+import PasswordChanged from "../components/password/PasswordChanged";
+import PasswordChangeError from "../components/password/PasswordChangeError";
 
 function Home(props: { name: string }) {
 
@@ -11,6 +13,11 @@ function Home(props: { name: string }) {
     const [showReviewer, setShowReviewer] = useState(false);
     const [resultUser, setResultUser] = useState(false);
     const [showUser, setShowUser] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [showPasswordHint, setShowPasswordHint] = useState(false);
+    const [passwordChangedSuccessfully, setPasswordChangedSuccessfully] = useState(false);
+
+    const URL = 'http://localhost:8080/api/v1';
 
     if (!props.name) {
         return <Navigate to="/login" />;
@@ -19,7 +26,7 @@ function Home(props: { name: string }) {
     const jwtToken = 'Bearer ' + localStorage.getItem('userName');
 
     const admin = async () => {
-        await fetch('http://localhost:8080/api/v1/internal/admin', {
+        await fetch(URL + '/internal/admin', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -32,7 +39,7 @@ function Home(props: { name: string }) {
     }
 
     const reviewer = async () => {
-        await fetch('http://localhost:8080/api/v1/internal/reviewer', {
+        await fetch(URL + '/internal/reviewer', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -45,7 +52,7 @@ function Home(props: { name: string }) {
     }
 
     const user = async () => {
-        await fetch('http://localhost:8080/api/v1/internal/user', {
+        await fetch(URL + '/internal/user', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -57,6 +64,23 @@ function Home(props: { name: string }) {
         })
     }
 
+    const changePassword = async () => {
+
+        await fetch(URL + '/auth/change-password', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': jwtToken
+            },
+            body: JSON.stringify({
+                newPassword
+            })
+        }).then((response) => {
+            setShowPasswordHint(true)
+            response.ok ? setPasswordChangedSuccessfully(true) : setPasswordChangedSuccessfully(false)
+        })
+    }
+
     return (
         <>
             <div className="display-4">
@@ -65,7 +89,8 @@ function Home(props: { name: string }) {
 
             <p className="lead">
                 You can check the following resources.
-                Access to the resources depends on your role you chose during registration.
+                Access to the resources depends on your role you chose during registration. Also
+                you can change password if you want.
             </p>
 
             <form onClick={admin}>
@@ -81,6 +106,15 @@ function Home(props: { name: string }) {
             <form onClick={user}>
                 <button className="w-100 btn btn-lg btn-outline-success" type="button">User resources</button>
                 {showUser ? (resultUser ? <AccessAllowed /> : <AccessDenied />) : ''}
+            </form>
+
+            <input type="password" className="form-control" placeholder="New password" required
+                onChange={e => setNewPassword(e.target.value)}
+            />
+
+            <form onClick={changePassword}>
+                <button className="w-100 btn btn-lg btn-outline-dark" type="button">Change password</button>
+                {showPasswordHint ? (passwordChangedSuccessfully ? <PasswordChanged /> : <PasswordChangeError />) : ''}
             </form>
 
         </>
