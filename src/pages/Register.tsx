@@ -4,7 +4,6 @@ import Hint from "../components/Hint";
 
 function Register() {
     const [userName, setUserName] = useState('');
-    const [role, setRole] = useState('ADMIN');
     const [password, setPassword] = useState('');
     const [redirect, setRedirect] = useState(false);
     const [showHint, setShowHint] = useState(false);
@@ -17,7 +16,6 @@ function Register() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 userName,
-                role,
                 password
             })
         }).then((response) => {
@@ -40,12 +38,6 @@ function Register() {
             <input className="form-control" placeholder="Name" required
                 onChange={e => setUserName(e.target.value)}
             />
-
-            <select id="role" className="form-control" required onChange={e => setRole(e.target.value)}>
-                <option value="ADMIN">ADMIN</option>
-                <option value="REVIEWER">REVIEWER</option>
-                <option value="USER">USER</option>
-            </select>
 
             <input type="password" className="form-control" placeholder="Password" required
                 onChange={e => setPassword(e.target.value)}

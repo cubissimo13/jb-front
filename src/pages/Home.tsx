@@ -4,6 +4,8 @@ import AccessAllowed from "../components/access/AccessAllowed";
 import AccessDenied from "../components/access/AccessDenied";
 import PasswordChanged from "../components/password/PasswordChanged";
 import PasswordChangeError from "../components/password/PasswordChangeError";
+import UserTable from "../components/user/UserTable";
+import {User} from "../data/User";
 
 function Home(props: { name: string }) {
 
@@ -16,11 +18,14 @@ function Home(props: { name: string }) {
     const [newPassword, setNewPassword] = useState('');
     const [showPasswordHint, setShowPasswordHint] = useState(false);
     const [passwordChangedSuccessfully, setPasswordChangedSuccessfully] = useState(false);
+    const [users, setUsers] = useState(new Array<User>(1));
+    const [showUsers, setShowUsers] = useState(false);
+    const [showUserResult, setShowUserResult] = useState(false);
 
     const URL = 'http://localhost:8080/api/v1';
 
     if (!props.name) {
-        return <Navigate to="/login" />;
+        return <Navigate to="/login"/>;
     }
 
     const jwtToken = 'Bearer ' + localStorage.getItem('userName');
@@ -81,6 +86,20 @@ function Home(props: { name: string }) {
         })
     }
 
+    const allUsers =() => {
+        fetch(URL + '/user-management/users', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': jwtToken
+            }
+        }).then((response) => {
+            setShowUserResult(true)
+            response.ok ? setShowUsers(true) : setShowUsers(false)
+            response.json().then(data => setUsers(data))
+        })
+    }
+
     return (
         <>
             <div className="display-4">
@@ -95,28 +114,32 @@ function Home(props: { name: string }) {
 
             <form onClick={admin}>
                 <button className="w-100 btn btn-lg btn-outline-primary" type="button">Admin resources</button>
-                {showAdmin ? (resultAdmin ? <AccessAllowed /> : <AccessDenied />) : ''}
+                {showAdmin ? (resultAdmin ? <AccessAllowed/> : <AccessDenied/>) : ''}
             </form>
 
             <form onClick={reviewer}>
                 <button className="w-100 btn btn-lg btn-outline-secondary" type="button">Reviewer resources</button>
-                {showReviewer ? (resultReviewer ? <AccessAllowed /> : <AccessDenied />) : ''}
+                {showReviewer ? (resultReviewer ? <AccessAllowed/> : <AccessDenied/>) : ''}
             </form>
 
             <form onClick={user}>
                 <button className="w-100 btn btn-lg btn-outline-success" type="button">User resources</button>
-                {showUser ? (resultUser ? <AccessAllowed /> : <AccessDenied />) : ''}
+                {showUser ? (resultUser ? <AccessAllowed/> : <AccessDenied/>) : ''}
             </form>
 
             <input type="password" className="form-control" placeholder="New password" required
-                onChange={e => setNewPassword(e.target.value)}
+                   onChange={e => setNewPassword(e.target.value)}
             />
 
             <form onClick={changePassword}>
                 <button className="w-100 btn btn-lg btn-outline-dark" type="button">Change password</button>
-                {showPasswordHint ? (passwordChangedSuccessfully ? <PasswordChanged /> : <PasswordChangeError />) : ''}
+                {showPasswordHint ? (passwordChangedSuccessfully ? <PasswordChanged/> : <PasswordChangeError/>) : ''}
             </form>
 
+            <form onClick={allUsers}>
+                <button className="w-100 btn btn-lg btn-outline-info" type="button">Show Users</button>
+                {showUserResult ? (showUsers ? <UserTable users={users}/> : <AccessDenied/>) : ''}
+            </form>
         </>
     );
 }
